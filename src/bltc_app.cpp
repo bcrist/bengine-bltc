@@ -64,27 +64,26 @@ BltcApp::BltcApp(int argc, char** argv) {
          (abstract ("By default file inputs will be compiled to a file of the same name with extension '.lua'. "
           "When processing non-file inputs, the output will be sent to stdout by default.").verbose())
 
-         (param ({ "o" },{ "output" }, "PATH", "Specifies an output path where the next compiled input should be saved.",
-            [&](const S& str) {
+         (param ({ "o" },{ "output" }, "PATH", [&](const S& str) {
                dest = str;
                dest_type = DestType::path;
-            }).extra(Cell() << nl << "Must be specified before the input it affects.  Only a single input will be affected.  "
+            }).desc("Specifies an output path where the next compiled input should be saved.")
+              .extra(Cell() << nl << "Must be specified before the input it affects.  Only a single input will be affected.  "
                                      "Relative paths will be resolved based on the path specified by "
                             << fg_yellow << "--output-dir" << reset
                             << " or the working directory.  If the specified file does not exist, it will be created; "
                                "otherwise it will be overwritten."))
 
-         (flag ({ },{ "stdout" }, "Outputs the next compiled input to standard output.",
-            [&](){
-               dest_type = DestType::console;
-            }).extra(Cell() << nl << "Must be specified before the input it affects.  Only a single input will be affected."))
+         (flag ({ },{ "stdout" }, dest_type, DestType::console)
+            .desc("Outputs the next compiled input to standard output.")
+            .extra(Cell() << nl << "Must be specified before the input it affects.  Only a single input will be affected."))
 
-         (flag ({ },{ "debug" }, "Outputs parse trees instead of the compiled output.", debug_mode_)
+         (flag ({ },{ "debug" }, debug_mode_)
+            .desc("Outputs parse trees instead of the compiled output.")
             .extra(Cell() << nl << "Applies to all inputs, including those that were specified "
                                    "earlier on the command line."))
           
-         (param ({ "I" },{ "input" }, "STRING", 
-            [&](const S& str) {
+         (param ({ "I" },{ "input" }, "STRING", [&](const S& str) {
                if (dest.empty()) {
                   dest_type = DestType::console;
                }
@@ -94,15 +93,15 @@ BltcApp::BltcApp(int argc, char** argv) {
             }).desc(Cell() << "Treats " << fg_cyan << "STRING" << reset << " as a raw BLT template instead of a filename.")
               .extra(Cell() << nl << "If no output file is specified, it will be directed to standard output."))
 
-         (flag ({ },{ "stdin" }, "Reads data from standard input and treats it as an input.",
-            [&]() {
+         (flag ({ },{ "stdin" }, [&]() {
                if (dest.empty()) {
                   dest_type = DestType::console;
                }
                jobs_.push_back({ S(), dest, SourceType::console, dest_type });
                dest.clear();
                dest_type = DestType::path;
-            }).extra(Cell() << nl << "If no output file is specified, it will be directed to standard output.  "
+            }).desc("Reads data from standard input and treats it as an input.")
+              .extra(Cell() << nl << "If no output file is specified, it will be directed to standard output.  "
                                      "Input ends when the first EOF character is encountered.  If multiple "
                             << fg_yellow << "--stdin" << reset << " flags are provided, the same input will be used for each."))
 
@@ -113,22 +112,22 @@ BltcApp::BltcApp(int argc, char** argv) {
                return true;
             }))
 
-         (param ({ "D" },{ "input-dir" }, "PATH", "Specifies a search path in which to search for input files.",
-            [&](const S& str) {
+         (param ({ "D" },{ "input-dir" }, "PATH", [&](const S& str) {
                util::parse_multi_path(str, search_paths_);
-            }).extra(Cell() << nl << "Multiple input directories may be specified by separating them with ';' or ':', or by using multiple "
+            }).desc("Specifies a search path in which to search for input files.")
+              .extra(Cell() << nl << "Multiple input directories may be specified by separating them with ';' or ':', or by using multiple "
                             << fg_yellow << "--input-dir" << reset
                             << " options.  Directories will be searched in the order they are specified.  If no input directories "
                                "are specified, the working directory is implicitly searched.  The search path applies to all "
                                "input files, including ones specified earlier on the command line."))
 
-         (param ({ "d" },{ "output-dir" }, "PATH", "Specifies a directory to resolve relative output paths.",
-            [&](const S& str) {
+         (param ({ "d" },{ "output-dir" }, "PATH", [&](const S& str) {
                if (!output_path_.empty()) {
                   throw OptionException(proc.context(), "An output directory has already been specified");
                }
                output_path_ = util::parse_path(str);
-            }).extra(Cell() << nl << "If no output directory or filename is specified files will be saved in the same directory as "
+            }).desc("Specifies a directory to resolve relative output paths.")
+              .extra(Cell() << nl << "If no output directory or filename is specified files will be saved in the same directory as "
                                      "the input file.  If an output filename is specified but not an output directory, the working "
                                      "directory will be used.  Only one output directory may be specified, and it applies to all "
                                      "inputs, including those specified earlier on the command line."))
@@ -137,10 +136,9 @@ BltcApp::BltcApp(int argc, char** argv) {
 
          (verbosity_param ({ "v" },{ "verbosity" }, "LEVEL", default_log().verbosity_mask()))
          
-         (flag ({ "V" },{ "version" }, "Prints version information to standard output.", show_version))
+         (flag ({ "V" },{ "version" }, show_version).desc("Prints version information to standard output."))
 
-         (param ({ "?" },{ "help" }, "OPTION",
-            [&](const S& value) {
+         (param ({ "?" },{ "help" }, "OPTION", [&](const S& value) {
                show_help = true;
                help_query = value;
             }).default_value(S())
@@ -149,8 +147,7 @@ BltcApp::BltcApp(int argc, char** argv) {
               .extra(Cell() << nl << "If " << fg_cyan << "OPTION" << reset
                             << " is provided, the options list will be filtered to show only options that contain that string."))
 
-         (flag ({ },{ "help" },
-            [&]() {
+         (flag ({ },{ "help" }, [&]() {
                proc.verbose(true);
             }).ignore_values(true))
                
