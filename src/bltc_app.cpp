@@ -407,7 +407,7 @@ void BltcApp::process_path_(const Path& path, Job& job) {
          & hidden(ids::log_attr_path) << path.generic_string()
          | default_log();
 
-      data = util::get_file_contents_string(path);
+      data = util::throw_on_error(util::get_file_contents_string(path));
    } catch (const fs::filesystem_error& e) {
       status_ = std::max(status_, (I8)4);
       be_error() << "Filesystem error while reading file!"

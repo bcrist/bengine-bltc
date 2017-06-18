@@ -5,6 +5,7 @@ tool 'bltc' {
          'core',
          'core-id-with-names',
          'util',
+         'util-fs',
          'cli',
          'ctable',
          'blt'
