@@ -5,7 +5,7 @@
 #include <be/blt/blt.hpp>
 #include <be/cli/cli.hpp>
 #include <be/core/logging.hpp>
-#include <be/util/files.hpp>
+#include <be/util/get_file_contents.hpp>
 #include <be/util/path_glob.hpp>
 #include <be/core/alg.hpp>
 #include <iostream>
@@ -62,7 +62,7 @@ BltcApp::BltcApp(int argc, char** argv) {
          (abstract ("BLTC compiles Backtick Lua Template (BLT) files to Lua source code."))
 
          (abstract ("By default file inputs will be compiled to a file of the same name with extension '.lua'. "
-          "When processing non-file inputs, the output will be sent to stdout by default.").verbose())
+                    "When processing non-file inputs, the output will be sent to stdout by default.").verbose())
 
          (param ({ "o" },{ "output" }, "PATH", [&](const S& str) {
                dest = str;
@@ -123,7 +123,7 @@ BltcApp::BltcApp(int argc, char** argv) {
 
          (param ({ "d" },{ "output-dir" }, "PATH", [&](const S& str) {
                if (!output_path_.empty()) {
-                  throw OptionException(proc.context(), "An output directory has already been specified");
+                  throw std::runtime_error("An output directory has already been specified");
                }
                output_path_ = util::parse_path(str);
             }).desc("Specifies a directory to resolve relative output paths.")
@@ -194,20 +194,20 @@ BltcApp::BltcApp(int argc, char** argv) {
          proc.describe(std::cout, ids::cli_describe_section_license);
       }
       
-   } catch (const cli::OptionException& e) {
+   } catch (const cli::OptionError& e) {
       status_ = 2;
       be_error() << S(e.what())
          & attr(ids::log_attr_index) << e.raw_position()
          & attr(ids::log_attr_argument) << S(e.argument())
          & attr(ids::log_attr_option) << S(e.option())
          | default_log();
-   } catch (const cli::ArgumentException& e) {
+   } catch (const cli::ArgumentError& e) {
       status_ = 2;
       be_error() << S(e.what())
          & attr(ids::log_attr_index) << e.raw_position()
          & attr(ids::log_attr_argument) << S(e.argument())
          | default_log();
-   } catch (const Fatal& e) {
+   } catch (const FatalTrace& e) {
       status_ = 2;
       be_error() << "Fatal error while parsing command line!"
          & attr(ids::log_attr_message) << S(e.what())
@@ -233,9 +233,7 @@ int BltcApp::operator()() {
       }
 
       for (const Path& p : search_paths_) {
-         be_short_verbose() << "Search path: " << color::fg_gray << BE_LOG_INTERP(BEIDN_LOG_ATTR_PATH)
-            & hidden(ids::log_attr_path) << p.generic_string()
-            | default_log();
+         be_short_verbose() << "Search path: " << color::fg_gray << p.generic_string() | default_log();
       }
 
       if (!output_path_.empty()) {
@@ -251,9 +249,7 @@ int BltcApp::operator()() {
             return status_;
          }
 
-         be_short_verbose() << "Output path: " << color::fg_gray << BE_LOG_INTERP(BEIDN_LOG_ATTR_PATH)
-            & hidden(ids::log_attr_path) << output_path_.generic_string()
-            | default_log();
+         be_short_verbose() << "Output path: " << color::fg_gray << output_path_.generic_string() | default_log();
       }
    } catch (const fs::filesystem_error& e) {
       status_ = 1;
@@ -262,7 +258,7 @@ int BltcApp::operator()() {
          & attr(ids::log_attr_code) << std::error_code(e.code())
          & attr(ids::log_attr_path) << e.path1().generic_string()
          | default_log();
-   } catch (const Fatal& e) {
+   } catch (const FatalTrace& e) {
       status_ = 1;
       be_error() << "Fatal error while configuring paths!"
          & attr(ids::log_attr_message) << S(e.what())
@@ -283,7 +279,7 @@ int BltcApp::operator()() {
       for (auto& job : jobs_) {
          process_(job);
       }
-   } catch (const Fatal& e) {
+   } catch (const FatalTrace& e) {
       status_ = std::max(status_, (I8)1);
       be_error() << "Unexpected fatal error!"
          & attr(ids::log_attr_message) << S(e.what())
@@ -305,9 +301,7 @@ void BltcApp::process_(Job& job) {
       if (job.source_type == SourceType::path) {
          Path source = util::parse_path(job.source);
 
-         be_short_verbose() << "Processing input path: " << color::fg_gray << BE_LOG_INTERP(BEIDN_LOG_ATTR_PATH)
-            & hidden(ids::log_attr_path) << S(job.source)
-            | default_log();
+         be_short_verbose() << "Processing input path: " << color::fg_gray << S(job.source) | default_log();
 
          if (source.is_absolute() && fs::exists(source)) {
             process_path_(source, job);
@@ -319,9 +313,7 @@ void BltcApp::process_(Job& job) {
 
             if (paths.size() > 1) {
                for (const Path& p : paths) {
-                  be_short_verbose() << "Expanded input path match: " << color::fg_gray << BE_LOG_INTERP(BEIDN_LOG_ATTR_PATH)
-                     & hidden(ids::log_attr_path) << p.generic_string()
-                     | default_log();
+                  be_short_verbose() << "Expanded input path match: " << color::fg_gray << p.generic_string() | default_log();
                }
             }
 
@@ -335,9 +327,7 @@ void BltcApp::process_(Job& job) {
          status_ = std::max(status_, I8(3));
 
          LogRecord rec;
-         be_warn() << "No files found matching " << color::fg_gray << BE_LOG_INTERP(BEIDN_LOG_ATTR_PATH)
-            & hidden(ids::log_attr_path) << source.generic_string()
-            || rec;
+         be_warn() << "No files found matching " << color::fg_gray << source.generic_string() || rec;
 
          for (Path& p : search_paths_) {
             log_nil() & attr(ids::log_attr_search_path) << p.generic_string() || rec;
@@ -364,7 +354,7 @@ void BltcApp::process_(Job& job) {
          & attr(ids::log_attr_code) << std::error_code(e.code())
          & attr(ids::log_attr_path) << e.path1().generic_string()
          | default_log();
-   } catch (const Fatal& e) {
+   } catch (const FatalTrace& e) {
       status_ = 1;
       be_error() << "Fatal error while processing job!"
          & attr(ids::log_attr_message) << S(e.what())
@@ -403,11 +393,9 @@ void BltcApp::process_path_(const Path& path, Job& job) {
          job.dest = dest.string();
       }
 
-      be_short_verbose() << "Loading file: " << color::fg_gray << BE_LOG_INTERP(BEIDN_LOG_ATTR_PATH)
-         & hidden(ids::log_attr_path) << path.generic_string()
-         | default_log();
+      be_short_verbose() << "Loading file: " << color::fg_gray << path.generic_string() | default_log();
 
-      data = util::throw_on_error(util::get_file_contents_string(path));
+      data = util::get_file_contents_string(path);
    } catch (const fs::filesystem_error& e) {
       status_ = std::max(status_, (I8)4);
       be_error() << "Filesystem error while reading file!"
@@ -417,7 +405,7 @@ void BltcApp::process_path_(const Path& path, Job& job) {
          & attr(ids::log_attr_input_path) << path.generic_string()
          | default_log();
       return;
-   } catch (const Fatal& e) {
+   } catch (const FatalTrace& e) {
       status_ = std::max(status_, (I8)4);
       be_error() << "Fatal error while reading file!"
          & attr(ids::log_attr_message) << S(e.what())
@@ -459,9 +447,7 @@ void BltcApp::process_raw_(const S& data, Job& job) {
    std::ostream* os = nullptr;
    if (job.dest_type == DestType::path) {
       try {
-         be_short_verbose() << "Opening output file: " << color::fg_gray << BE_LOG_INTERP(BEIDN_LOG_ATTR_PATH)
-            & hidden(ids::log_attr_path) << S(job.dest)
-            | default_log();
+         be_short_verbose() << "Opening output file: " << color::fg_gray << S(job.dest) | default_log();
 
          ofs.open(Path(job.dest).native(), std::ios::binary);
          os = &ofs;
@@ -473,7 +459,7 @@ void BltcApp::process_raw_(const S& data, Job& job) {
             & attr(ids::log_attr_path) << e.path1().generic_string()
             & attr(ids::log_attr_output_path) << S(job.dest)
             | default_log();
-      } catch (const Fatal& e) {
+      } catch (const FatalTrace& e) {
          status_ = std::max(status_, (I8)5);
          be_error() << "Fatal error while opening file!"
             & attr(ids::log_attr_message) << S(e.what())
@@ -504,7 +490,7 @@ void BltcApp::process_raw_(const S& data, Job& job) {
       } else {
          blt::compile_blt(data, *os);
       }
-   } catch (const RecoverableException<void>& e) {
+   } catch (const std::runtime_error& e) {
       status_ = std::max(status_, (I8)6);
       be_error() << "BLT exception!"
          & attr(ids::log_attr_message) << S(e.what())
