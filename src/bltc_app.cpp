@@ -5,6 +5,7 @@
 #include <be/blt/blt.hpp>
 #include <be/cli/cli.hpp>
 #include <be/core/logging.hpp>
+#include <be/core/log_exception.hpp>
 #include <be/util/get_file_contents.hpp>
 #include <be/util/path_glob.hpp>
 #include <be/core/alg.hpp>
@@ -196,29 +197,26 @@ BltcApp::BltcApp(int argc, char** argv) {
       
    } catch (const cli::OptionError& e) {
       status_ = 2;
-      be_error() << S(e.what())
-         & attr(ids::log_attr_index) << e.raw_position()
-         & attr(ids::log_attr_argument) << S(e.argument())
-         & attr(ids::log_attr_option) << S(e.option())
-         | default_log();
+      cli::log_exception(e, default_log());
    } catch (const cli::ArgumentError& e) {
       status_ = 2;
-      be_error() << S(e.what())
-         & attr(ids::log_attr_index) << e.raw_position()
-         & attr(ids::log_attr_argument) << S(e.argument())
-         | default_log();
+      cli::log_exception(e, default_log());
    } catch (const FatalTrace& e) {
       status_ = 2;
-      be_error() << "Fatal error while parsing command line!"
-         & attr(ids::log_attr_message) << S(e.what())
-         & attr(ids::log_attr_trace) << StackTrace(e.trace())
-         | default_log();
+      log_exception(e, default_log());
+   } catch (const RecoverableTrace& e) {
+      status_ = 2;
+      log_exception(e, default_log());
+   } catch (const fs::filesystem_error& e) {
+      status_ = 2;
+      log_exception(e, default_log());
+   } catch (const std::system_error& e) {
+      status_ = 2;
+      log_exception(e, default_log());
    } catch (const std::exception& e) {
       status_ = 2;
-      be_error() << "Unexpected exception parsing command line!"
-         & attr(ids::log_attr_message) << S(e.what())
-         | default_log();
-   }   
+      log_exception(e, default_log());
+   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -251,24 +249,21 @@ int BltcApp::operator()() {
 
          be_short_verbose() << "Output path: " << color::fg_gray << output_path_.generic_string() | default_log();
       }
-   } catch (const fs::filesystem_error& e) {
-      status_ = 1;
-      be_error() << "Filesystem error while configuring paths!"
-         & attr(ids::log_attr_message) << S(e.what())
-         & attr(ids::log_attr_code) << std::error_code(e.code())
-         & attr(ids::log_attr_path) << e.path1().generic_string()
-         | default_log();
    } catch (const FatalTrace& e) {
       status_ = 1;
-      be_error() << "Fatal error while configuring paths!"
-         & attr(ids::log_attr_message) << S(e.what())
-         & attr(ids::log_attr_trace) << StackTrace(e.trace())
-         | default_log();
+      log_exception(e, default_log());
+   } catch (const RecoverableTrace& e) {
+      status_ = 1;
+      log_exception(e, default_log());
+   } catch (const fs::filesystem_error& e) {
+      status_ = 1;
+      log_exception(e, default_log());
+   } catch (const std::system_error& e) {
+      status_ = 1;
+      log_exception(e, default_log());
    } catch (const std::exception& e) {
       status_ = 1;
-      be_error() << "Unexpected exception while configuring paths!"
-         & attr(ids::log_attr_message) << S(e.what())
-         | default_log();
+      log_exception(e, default_log());
    }
     
    if (status_ != 0) {
@@ -281,15 +276,19 @@ int BltcApp::operator()() {
       }
    } catch (const FatalTrace& e) {
       status_ = std::max(status_, (I8)1);
-      be_error() << "Unexpected fatal error!"
-         & attr(ids::log_attr_message) << S(e.what())
-         & attr(ids::log_attr_trace) << StackTrace(e.trace())
-         | default_log();
+      log_exception(e, default_log());
+   } catch (const RecoverableTrace& e) {
+      status_ = std::max(status_, (I8)1);
+      log_exception(e, default_log());
+   } catch (const fs::filesystem_error& e) {
+      status_ = std::max(status_, (I8)1);
+      log_exception(e, default_log());
+   } catch (const std::system_error& e) {
+      status_ = std::max(status_, (I8)1);
+      log_exception(e, default_log());
    } catch (const std::exception& e) {
       status_ = std::max(status_, (I8)1);
-      be_error() << "Unexpected exception!"
-         & attr(ids::log_attr_message) << S(e.what())
-         | default_log();
+      log_exception(e, default_log());
    }
 
    return status_;
@@ -346,25 +345,22 @@ void BltcApp::process_(Job& job) {
 
          process_non_path_(job.source, job);
       }
-      
-   } catch (const fs::filesystem_error& e) {
-      status_ = 4;
-      be_error() << "Filesystem error while processing job!"
-         & attr(ids::log_attr_message) << S(e.what())
-         & attr(ids::log_attr_code) << std::error_code(e.code())
-         & attr(ids::log_attr_path) << e.path1().generic_string()
-         | default_log();
+   
    } catch (const FatalTrace& e) {
       status_ = 1;
-      be_error() << "Fatal error while processing job!"
-         & attr(ids::log_attr_message) << S(e.what())
-         & attr(ids::log_attr_trace) << StackTrace(e.trace())
-         | default_log();
+      log_exception(e, default_log());
+   } catch (const RecoverableTrace& e) {
+      status_ = 1;
+      log_exception(e, default_log());
+   } catch (const fs::filesystem_error& e) {
+      status_ = 4;
+      log_exception(e, default_log());
+   } catch (const std::system_error& e) {
+      status_ = 1;
+      log_exception(e, default_log());
    } catch (const std::exception& e) {
       status_ = 1;
-      be_error() << "Unexpected exception while processing job!"
-         & attr(ids::log_attr_message) << S(e.what())
-         | default_log();
+      log_exception(e, default_log());
    }
 }
 
@@ -396,30 +392,22 @@ void BltcApp::process_path_(const Path& path, Job& job) {
       be_short_verbose() << "Loading file: " << color::fg_gray << path.generic_string() | default_log();
 
       data = util::get_file_contents_string(path);
-   } catch (const fs::filesystem_error& e) {
-      status_ = std::max(status_, (I8)4);
-      be_error() << "Filesystem error while reading file!"
-         & attr(ids::log_attr_message) << S(e.what())
-         & attr(ids::log_attr_code) << std::error_code(e.code())
-         & attr(ids::log_attr_path) << e.path1().generic_string()
-         & attr(ids::log_attr_input_path) << path.generic_string()
-         | default_log();
-      return;
+
    } catch (const FatalTrace& e) {
       status_ = std::max(status_, (I8)4);
-      be_error() << "Fatal error while reading file!"
-         & attr(ids::log_attr_message) << S(e.what())
-         & attr(ids::log_attr_trace) << StackTrace(e.trace())
-         & attr(ids::log_attr_input_path) << path.generic_string()
-         | default_log();
-      return;
+      log_exception(e, default_log());
+   } catch (const RecoverableTrace& e) {
+      status_ = std::max(status_, (I8)4);
+      log_exception(e, default_log());
+   } catch (const fs::filesystem_error& e) {
+      status_ = std::max(status_, (I8)4);
+      log_exception(e, default_log());
+   } catch (const std::system_error& e) {
+      status_ = std::max(status_, (I8)4);
+      log_exception(e, default_log());
    } catch (const std::exception& e) {
       status_ = std::max(status_, (I8)4);
-      be_error() << "Unexpected exception while reading file!"
-         & attr(ids::log_attr_message) << S(e.what())
-         & attr(ids::log_attr_input_path) << path.generic_string()
-         | default_log();
-      return;
+      log_exception(e, default_log());
    }
 
    process_raw_(data, job);
@@ -451,28 +439,22 @@ void BltcApp::process_raw_(const S& data, Job& job) {
 
          ofs.open(Path(job.dest).native(), std::ios::binary);
          os = &ofs;
-      } catch (const fs::filesystem_error& e) {
-         status_ = std::max(status_, (I8)5);
-         be_error() << "Filesystem error while opening file!"
-            & attr(ids::log_attr_message) << S(e.what())
-            & attr(ids::log_attr_code) << std::error_code(e.code())
-            & attr(ids::log_attr_path) << e.path1().generic_string()
-            & attr(ids::log_attr_output_path) << S(job.dest)
-            | default_log();
       } catch (const FatalTrace& e) {
          status_ = std::max(status_, (I8)5);
-         be_error() << "Fatal error while opening file!"
-            & attr(ids::log_attr_message) << S(e.what())
-            & attr(ids::log_attr_trace) << StackTrace(e.trace())
-            & attr(ids::log_attr_output_path) << S(job.dest)
-            | default_log();
+         log_exception(e, default_log());
+      } catch (const RecoverableTrace& e) {
+         status_ = std::max(status_, (I8)5);
+         log_exception(e, default_log());
+      } catch (const fs::filesystem_error& e) {
+         status_ = std::max(status_, (I8)5);
+         log_exception(e, default_log());
+      } catch (const std::system_error& e) {
+         status_ = std::max(status_, (I8)5);
+         log_exception(e, default_log());
       } catch (const std::exception& e) {
          status_ = std::max(status_, (I8)5);
-         be_error() << "Unexpected exception while opening file!"
-            & attr(ids::log_attr_message) << S(e.what())
-            & attr(ids::log_attr_output_path) << S(job.dest)
-            | default_log();
-      }         
+         log_exception(e, default_log());
+      }
    } else {
       be_short_verbose() << "Outputting to stdout"
          | default_log();
@@ -490,11 +472,21 @@ void BltcApp::process_raw_(const S& data, Job& job) {
       } else {
          blt::compile_blt(data, *os);
       }
-   } catch (const std::runtime_error& e) {
+   } catch (const FatalTrace& e) {
+         status_ = std::max(status_, (I8)6);
+      log_exception(e, default_log());
+   } catch (const RecoverableTrace& e) {
       status_ = std::max(status_, (I8)6);
-      be_error() << "BLT exception!"
-         & attr(ids::log_attr_message) << S(e.what())
-         | default_log();
+      log_exception(e, default_log());
+   } catch (const fs::filesystem_error& e) {
+      status_ = std::max(status_, (I8)6);
+      log_exception(e, default_log());
+   } catch (const std::system_error& e) {
+      status_ = std::max(status_, (I8)6);
+      log_exception(e, default_log());
+   } catch (const std::exception& e) {
+      status_ = std::max(status_, (I8)6);
+      log_exception(e, default_log());
    }
 }
 
