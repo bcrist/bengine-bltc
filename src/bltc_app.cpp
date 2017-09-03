@@ -50,6 +50,7 @@ BltcApp::BltcApp(int argc, char** argv) {
 
       bool show_version = false;
       bool show_help = false;
+      bool verbose = false;
       S help_query;
 
       proc
@@ -148,9 +149,7 @@ BltcApp::BltcApp(int argc, char** argv) {
               .extra(Cell() << nl << "If " << fg_cyan << "OPTION" << reset
                             << " is provided, the options list will be filtered to show only options that contain that string."))
 
-         (flag ({ },{ "help" }, [&]() {
-               proc.verbose(true);
-            }).ignore_values(true))
+         (flag ({ },{ "help" }, verbose).ignore_values(true))
                
          (exit_code (0, "There were no errors."))
          (exit_code (1, "An unknown error occurred."))
@@ -171,7 +170,7 @@ BltcApp::BltcApp(int argc, char** argv) {
 
          ;
 
-      proc(argc, argv);
+      proc.process(argc, argv);
 
       if (!show_help && !show_version && jobs_.empty()) {
          show_help = true;
@@ -189,10 +188,10 @@ BltcApp::BltcApp(int argc, char** argv) {
       }
       
       if (show_help) {
-         proc.describe(std::cout, help_query);
+         proc.describe(std::cout, verbose, help_query);
       } else if (show_version) {
-         proc.describe(std::cout, ids::cli_describe_section_prologue);
-         proc.describe(std::cout, ids::cli_describe_section_license);
+         proc.describe(std::cout, verbose, ids::cli_describe_section_prologue);
+         proc.describe(std::cout, verbose, ids::cli_describe_section_license);
       }
       
    } catch (const cli::OptionError& e) {
