@@ -84,7 +84,7 @@ BltcApp::BltcApp(int argc, char** argv) {
             .desc("Outputs parse trees instead of the compiled output.")
             .extra(Cell() << nl << "Applies to all inputs, including those that were specified "
                                    "earlier on the command line."))
-          
+
          (param ({ "I" },{ "input" }, "STRING", [&](const S& str) {
                if (dest.empty()) {
                   dest_type = DestType::console;
@@ -137,7 +137,7 @@ BltcApp::BltcApp(int argc, char** argv) {
          (end_of_options ())
 
          (verbosity_param ({ "v" },{ "verbosity" }, "LEVEL", default_log().verbosity_mask()))
-         
+
          (flag ({ "V" },{ "version" }, show_version).desc("Prints version information to standard output."))
 
          (param ({ "?" },{ "help" }, "OPTION", [&](const S& value) {
@@ -150,7 +150,7 @@ BltcApp::BltcApp(int argc, char** argv) {
                             << " is provided, the options list will be filtered to show only options that contain that string."))
 
          (flag ({ },{ "help" }, verbose).ignore_values(true))
-               
+
          (exit_code (0, "There were no errors."))
          (exit_code (1, "An unknown error occurred."))
          (exit_code (2, "There was a problem parsing the command line arguments."))
@@ -158,7 +158,7 @@ BltcApp::BltcApp(int argc, char** argv) {
          (exit_code (4, "An I/O error occurred while reading an input file."))
          (exit_code (5, "An I/O error occurred while writing an output file."))
          (exit_code (6, "A BLT lexer or parser error occurred."))
-               
+
          (example (Cell() << fg_gray << "foo.blt",
             "Compiles a file named 'foo.blt' in the working directory and saves the output to 'foo.lua'."))
          (example (Cell() << fg_yellow << "-d " << fg_cyan << "out/" << fg_gray << " bar.blt",
@@ -186,14 +186,14 @@ BltcApp::BltcApp(int argc, char** argv) {
             (license (BE_COPYRIGHT).query())
             ;
       }
-      
+
       if (show_help) {
          proc.describe(std::cout, verbose, help_query);
       } else if (show_version) {
          proc.describe(std::cout, verbose, ids::cli_describe_section_prologue);
          proc.describe(std::cout, verbose, ids::cli_describe_section_license);
       }
-      
+
    } catch (const cli::OptionError& e) {
       status_ = 2;
       cli::log_exception(e, default_log());
@@ -264,7 +264,7 @@ int BltcApp::operator()() {
       status_ = 1;
       log_exception(e, default_log());
    }
-    
+
    if (status_ != 0) {
       return status_;
    }
@@ -305,7 +305,7 @@ void BltcApp::process_(Job& job) {
             process_path_(source, job);
             return;
          }
-         
+
          std::vector<Path> paths = util::glob(job.source, search_paths_, util::PathMatchType::files_and_misc);
          if (!paths.empty()) {
 
@@ -321,7 +321,7 @@ void BltcApp::process_(Job& job) {
             }
             return;
          }
-         
+
          status_ = std::max(status_, I8(3));
 
          LogRecord rec;
@@ -344,7 +344,7 @@ void BltcApp::process_(Job& job) {
 
          process_non_path_(job.source, job);
       }
-   
+
    } catch (const FatalTrace& e) {
       status_ = 1;
       log_exception(e, default_log());
@@ -464,7 +464,7 @@ void BltcApp::process_raw_(const S& data, Job& job) {
    if (!os || !(*os)) {
       return;
    }
-   
+
    try {
       if (debug_mode_) {
          blt::debug_blt(data, *os);
