@@ -6,7 +6,7 @@
 
 #define BE_BLTC_VERSION_MAJOR 0
 #define BE_BLTC_VERSION_MINOR 1
-#define BE_BLTC_VERSION_REV 9
+#define BE_BLTC_VERSION_REV 10
 
 /*!! include('common/version', 'BE_BLTC', 'BLTC') !! 6 */
 /* ################# !! GENERATED CODE -- DO NOT MODIFY !! ################# */

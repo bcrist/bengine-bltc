@@ -196,25 +196,25 @@ BltcApp::BltcApp(int argc, char** argv) {
 
    } catch (const cli::OptionError& e) {
       status_ = 2;
-      cli::log_exception(e, default_log());
+      cli::log_exception(e);
    } catch (const cli::ArgumentError& e) {
       status_ = 2;
-      cli::log_exception(e, default_log());
+      cli::log_exception(e);
    } catch (const FatalTrace& e) {
       status_ = 2;
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const RecoverableTrace& e) {
       status_ = 2;
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const fs::filesystem_error& e) {
       status_ = 2;
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const std::system_error& e) {
       status_ = 2;
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const std::exception& e) {
       status_ = 2;
-      log_exception(e, default_log());
+      log_exception(e);
    }
 }
 
@@ -250,19 +250,19 @@ int BltcApp::operator()() {
       }
    } catch (const FatalTrace& e) {
       status_ = 1;
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const RecoverableTrace& e) {
       status_ = 1;
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const fs::filesystem_error& e) {
       status_ = 1;
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const std::system_error& e) {
       status_ = 1;
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const std::exception& e) {
       status_ = 1;
-      log_exception(e, default_log());
+      log_exception(e);
    }
 
    if (status_ != 0) {
@@ -275,19 +275,19 @@ int BltcApp::operator()() {
       }
    } catch (const FatalTrace& e) {
       status_ = std::max(status_, (I8)1);
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const RecoverableTrace& e) {
       status_ = std::max(status_, (I8)1);
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const fs::filesystem_error& e) {
       status_ = std::max(status_, (I8)1);
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const std::system_error& e) {
       status_ = std::max(status_, (I8)1);
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const std::exception& e) {
       status_ = std::max(status_, (I8)1);
-      log_exception(e, default_log());
+      log_exception(e);
    }
 
    return status_;
@@ -347,19 +347,19 @@ void BltcApp::process_(Job& job) {
 
    } catch (const FatalTrace& e) {
       status_ = 1;
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const RecoverableTrace& e) {
       status_ = 1;
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const fs::filesystem_error& e) {
       status_ = 4;
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const std::system_error& e) {
       status_ = 1;
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const std::exception& e) {
       status_ = 1;
-      log_exception(e, default_log());
+      log_exception(e);
    }
 }
 
@@ -394,19 +394,19 @@ void BltcApp::process_path_(const Path& path, Job& job) {
 
    } catch (const FatalTrace& e) {
       status_ = std::max(status_, (I8)4);
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const RecoverableTrace& e) {
       status_ = std::max(status_, (I8)4);
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const fs::filesystem_error& e) {
       status_ = std::max(status_, (I8)4);
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const std::system_error& e) {
       status_ = std::max(status_, (I8)4);
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const std::exception& e) {
       status_ = std::max(status_, (I8)4);
-      log_exception(e, default_log());
+      log_exception(e);
    }
 
    process_raw_(data, job);
@@ -440,19 +440,19 @@ void BltcApp::process_raw_(const S& data, Job& job) {
          os = &ofs;
       } catch (const FatalTrace& e) {
          status_ = std::max(status_, (I8)5);
-         log_exception(e, default_log());
+         log_exception(e);
       } catch (const RecoverableTrace& e) {
          status_ = std::max(status_, (I8)5);
-         log_exception(e, default_log());
+         log_exception(e);
       } catch (const fs::filesystem_error& e) {
          status_ = std::max(status_, (I8)5);
-         log_exception(e, default_log());
+         log_exception(e);
       } catch (const std::system_error& e) {
          status_ = std::max(status_, (I8)5);
-         log_exception(e, default_log());
+         log_exception(e);
       } catch (const std::exception& e) {
          status_ = std::max(status_, (I8)5);
-         log_exception(e, default_log());
+         log_exception(e);
       }
    } else {
       be_short_verbose() << "Outputting to stdout"
@@ -473,19 +473,19 @@ void BltcApp::process_raw_(const S& data, Job& job) {
       }
    } catch (const FatalTrace& e) {
          status_ = std::max(status_, (I8)6);
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const RecoverableTrace& e) {
       status_ = std::max(status_, (I8)6);
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const fs::filesystem_error& e) {
       status_ = std::max(status_, (I8)6);
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const std::system_error& e) {
       status_ = std::max(status_, (I8)6);
-      log_exception(e, default_log());
+      log_exception(e);
    } catch (const std::exception& e) {
       status_ = std::max(status_, (I8)6);
-      log_exception(e, default_log());
+      log_exception(e);
    }
 }
 
